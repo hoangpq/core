@@ -6,6 +6,12 @@ import (
 	"github.com/mesg-foundation/core/database/services"
 	"github.com/mesg-foundation/core/execution"
 	"github.com/mesg-foundation/core/service"
+	uuid "github.com/satori/go.uuid"
+)
+
+const (
+	RESOLVER_SERVICE_ID = "aoehiaegjbkejfbq"
+	RESOLVER_TASK_KEY   = "resolve"
 )
 
 // taskExecutor provides functionalities to execute a MESG task.
@@ -24,6 +30,16 @@ func newTaskExecutor(api *API) *taskExecutor {
 func (e *taskExecutor) Execute(serviceID, taskKey string, inputData map[string]interface{},
 	tags []string) (executionID string, err error) {
 	s, err := services.Get(serviceID)
+	if _, ok := err.(services.NotFound); ok {
+		address, err := e.resolve(serviceID)
+		if err != nil {
+			return "", err
+		}
+		// TODO:
+		// res, err := e.delegateExecution(address, serviceID, taskKey, inputData)
+		// return res.ExecutionID, err
+		return "", err
+	}
 	if err != nil {
 		return "", err
 	}
@@ -58,6 +74,34 @@ func (e *taskExecutor) execute(s *service.Service, taskKey string, taskInputs ma
 		return "", err
 	}
 	return exc.ID, exc.Execute()
+}
+
+func (e *taskExecutor) resolve(serviceID string) (string, error) {
+	tags := []string{uuid.NewV4().String()}
+	s, err := services.Get(RESOLVER_SERVICE_ID)
+	if err != nil {
+		return "", err
+	}
+	ln, err := e.api.ListenResult(RESOLVER_SERVICE_ID, ListenResultTagFilters(tags))
+	if err != nil {
+		return "", err
+	}
+	defer ln.Close()
+
+	_, err = e.execute(s, RESOLVER_TASK_KEY, map[string]interface{}{
+		"serviceID": serviceID,
+	}, tags)
+	if err != nil {
+		return "", err
+	}
+	for {
+		select {
+		case err := <-ln.Err:
+			return "", err
+		case execution := <-ln.Executions:
+			return execution.OutputData["address"].(string), nil
+		}
+	}
 }
 
 // NotRunningServiceError is an error returned when the service is not running that
