@@ -1,20 +1,11 @@
-#!/bin/bash
+#!/bin/bash -x
 
-cd $GOPATH/src
-
-go get github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc
-
-PROJECT=github.com/mesg-foundation/core
-GRPC=$PROJECT/interface/grpc
-CORE=$(pwd)/$PROJECT
-API_DOCS="--doc_out=$CORE/docs/api/ --doc_opt=$CORE/docs/api.template"
-DATA_DOCS="--doc_out=$CORE/docs/api/ --doc_opt=$CORE/docs/data.template"
+DIR=grpcclient
+PWD=$(pwd)
+# API_DOCS="--doc_out=$PWD/docs/api/ --doc_opt=$PWD/docs/api.template"
+# DATA_DOCS="--doc_out=$PWD/docs/api/ --doc_opt=$PWD/docs/data.template"
 GRPC_PLUGIN="--go_out=plugins=grpc:./"
 
-protoc $GRPC_PLUGIN $DATA_DOCS,service-type.md --proto_path=./ $GRPC/core/service.proto
-protoc $GRPC_PLUGIN $API_DOCS,core.md          --proto_path=./ $GRPC/core/api.proto
-
-protoc $GRPC_PLUGIN --proto_path=./ $GRPC/core/api/service.proto
-protoc $GRPC_PLUGIN --proto_path=./ $GRPC/core/api/api.proto
-
-protoc $GRPC_PLUGIN $API_DOCS,service.md       --proto_path=./ $GRPC/service/api.proto
+protoc --go_out=plugins=grpc:$DIR --proto_path $DIR/ $DIR/service.proto
+protoc --go_out=plugins=grpc:$DIR --proto_path $DIR/ $DIR/core_api.proto
+protoc --go_out=plugins=grpc:$DIR --proto_path $DIR/ $DIR/service_api.proto

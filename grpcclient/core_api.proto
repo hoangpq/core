@@ -1,9 +1,8 @@
 syntax = "proto3";
 
-package api;
-option go_package = "api";
+package grpcclient;
 
-import "github.com/mesg-foundation/core/interface/grpc/core/api/service.proto";
+import "service.proto";
 
 // This is the primary API to interact with MESG Core functionalities.
 // It can be consumed by any applications or tools that you'd like to interact with MESG Core.

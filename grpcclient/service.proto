@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package api;
+package grpcclient;
 
 // This is the definition of a MESG Service.
 message Service {

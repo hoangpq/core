@@ -1,7 +1,6 @@
 syntax = "proto3";
 
-package api;
-option go_package = "service";
+package grpcclient;
 
 // This is the API for MESG Services to interact with MESG Core.
 // It is to be consumed only by MESG Services.
