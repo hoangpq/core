@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/mesg-foundation/core/database/services"
@@ -101,7 +102,8 @@ func (e *taskExecutor) resolve(serviceID string) (string, error) {
 		case err := <-ln.Err:
 			return "", err
 		case execution := <-ln.Executions:
-			return execution.OutputData["address"].(string), nil
+			address, _ := execution.OutputData["address"].(string)
+			return address, nil
 		}
 	}
 }
@@ -112,8 +114,17 @@ func (e *taskExecutor) delegateExecution(address, serviceID, taskKey string, inp
 		return nil, err
 	}
 
+	inputData, err := json.Marshal(inputs)
+	if err != nil {
+		return nil, err
+	}
+
 	client := grpcclient.NewCoreClient(conn)
-	return client.ExecuteTask(context.Background(), &grpcclient.ExecuteTaskRequest{})
+	return client.ExecuteTask(context.Background(), &grpcclient.ExecuteTaskRequest{
+		ServiceID: serviceID,
+		TaskKey:   taskKey,
+		InputData: string(inputData),
+	})
 }
 
 // NotRunningServiceError is an error returned when the service is not running that
