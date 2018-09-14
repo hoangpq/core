@@ -2,9 +2,11 @@ package core
 
 import (
 	"context"
+
+	"github.com/mesg-foundation/core/grpcclient"
 )
 
 // DeleteService stops and deletes service serviceID.
-func (s *Server) DeleteService(ctx context.Context, request *DeleteServiceRequest) (*DeleteServiceReply, error) {
-	return &DeleteServiceReply{}, s.api.DeleteService(request.ServiceID)
+func (s *Server) DeleteService(ctx context.Context, request *grpcclient.DeleteServiceRequest) (*grpcclient.DeleteServiceReply, error) {
+	return &grpcclient.DeleteServiceReply{}, s.api.DeleteService(request.ServiceID)
 }

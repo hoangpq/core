@@ -6,7 +6,7 @@ import (
 
 	"github.com/mesg-foundation/core/database/services"
 	"github.com/mesg-foundation/core/execution"
-	"github.com/mesg-foundation/core/interface/grpc/core/api"
+	"github.com/mesg-foundation/core/grpcclient"
 	"github.com/mesg-foundation/core/service"
 	uuid "github.com/satori/go.uuid"
 	"google.golang.org/grpc"
@@ -106,14 +106,14 @@ func (e *taskExecutor) resolve(serviceID string) (string, error) {
 	}
 }
 
-func (e *taskExecutor) delegateExecution(address, serviceID, taskKey string, inputs map[string]interface{}) (*api.ExecuteTaskReply, error) {
+func (e *taskExecutor) delegateExecution(address, serviceID, taskKey string, inputs map[string]interface{}) (*grpcclient.ExecuteTaskReply, error) {
 	conn, err := grpc.Dial(address, grpc.WithInsecure())
 	if err != nil {
 		return nil, err
 	}
 
-	client := api.NewCoreClient(conn)
-	return client.ExecuteTask(context.Background(), api.ExecuteTaskRequest{})
+	client := grpcclient.NewCoreClient(conn)
+	return client.ExecuteTask(context.Background(), &grpcclient.ExecuteTaskRequest{})
 }
 
 // NotRunningServiceError is an error returned when the service is not running that

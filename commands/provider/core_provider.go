@@ -7,18 +7,18 @@ import (
 
 	"github.com/mesg-foundation/core/container"
 	"github.com/mesg-foundation/core/daemon"
-	"github.com/mesg-foundation/core/interface/grpc/core"
+	"github.com/mesg-foundation/core/grpcclient"
 	"github.com/mesg-foundation/core/service"
 	"github.com/mesg-foundation/core/x/xerrors"
 )
 
 // CoreProvider is a struct that provides all methods required by core command.
 type CoreProvider struct {
-	client core.CoreClient
+	client grpcclient.CoreClient
 }
 
 // NewCoreProvider creates new CoreProvider.
-func NewCoreProvider(client core.CoreClient) *CoreProvider {
+func NewCoreProvider(client grpcclient.CoreClient) *CoreProvider {
 	return &CoreProvider{
 		client: client,
 	}
@@ -45,7 +45,7 @@ func (p *CoreProvider) Stop() error {
 	for _, id := range ids {
 		go func(id string) {
 			defer wg.Done()
-			if _, err := p.client.StopService(context.Background(), &core.StopServiceRequest{
+			if _, err := p.client.StopService(context.Background(), &grpcclient.StopServiceRequest{
 				ServiceID: id,
 			}); err == nil {
 				errC <- err

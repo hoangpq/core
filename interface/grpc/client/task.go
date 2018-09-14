@@ -4,14 +4,14 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/mesg-foundation/core/interface/grpc/core"
+	"github.com/mesg-foundation/core/grpcclient"
 )
 
-func (task *Task) processEvent(wf *Workflow, data *core.EventData) (err error) {
+func (task *Task) processEvent(wf *Workflow, data *grpcclient.EventData) (err error) {
 	return task.process(wf, data.EventData)
 }
 
-func (task *Task) processResult(wf *Workflow, data *core.ResultData) (err error) {
+func (task *Task) processResult(wf *Workflow, data *grpcclient.ResultData) (err error) {
 	return task.process(wf, data.OutputData)
 }
 
@@ -25,7 +25,7 @@ func (task *Task) process(wf *Workflow, data string) (err error) {
 	if err != nil {
 		return
 	}
-	_, err = wf.client.ExecuteTask(context.Background(), &core.ExecuteTaskRequest{
+	_, err = wf.client.ExecuteTask(context.Background(), &grpcclient.ExecuteTaskRequest{
 		ServiceID: task.ServiceID,
 		TaskKey:   task.Name,
 		InputData: inputData,

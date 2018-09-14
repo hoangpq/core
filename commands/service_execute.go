@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/mesg-foundation/core/interface/grpc/core"
+	"github.com/mesg-foundation/core/grpcclient"
 	"github.com/mesg-foundation/core/utils/pretty"
 	casting "github.com/mesg-foundation/core/utils/servicecasting"
 	"github.com/mesg-foundation/core/x/xpflag"
@@ -89,7 +89,7 @@ func (c *serviceExecuteCmd) runE(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *serviceExecuteCmd) getTaskKey(s *core.Service) error {
+func (c *serviceExecuteCmd) getTaskKey(s *grpcclient.Service) error {
 	if c.taskKey == "" {
 		keys := taskKeysFromService(s)
 		if len(keys) == 1 {
@@ -107,7 +107,7 @@ func (c *serviceExecuteCmd) getTaskKey(s *core.Service) error {
 	return nil
 }
 
-func (c *serviceExecuteCmd) getData(taskKey string, s *core.Service, dataStruct map[string]string) (string, error) {
+func (c *serviceExecuteCmd) getData(taskKey string, s *grpcclient.Service, dataStruct map[string]string) (string, error) {
 	if dataStruct != nil {
 		castData, err := casting.TaskInputs(s, taskKey, dataStruct)
 		if err != nil {
@@ -137,7 +137,7 @@ func readJSONFile(path string) (string, error) {
 	return string(data), nil
 }
 
-func taskKeysFromService(s *core.Service) []string {
+func taskKeysFromService(s *grpcclient.Service) []string {
 	var taskKeys []string
 	for _, task := range s.Tasks {
 		taskKeys = append(taskKeys, task.Key)

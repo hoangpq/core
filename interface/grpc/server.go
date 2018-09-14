@@ -7,6 +7,7 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
 	"github.com/mesg-foundation/core/api"
+	"github.com/mesg-foundation/core/grpcclient"
 	"github.com/mesg-foundation/core/interface/grpc/core"
 	"github.com/mesg-foundation/core/interface/grpc/service"
 	"github.com/sirupsen/logrus"
@@ -96,7 +97,7 @@ func (s *Server) register() error {
 	}
 
 	service.RegisterServiceServer(s.instance, serviceServer)
-	core.RegisterCoreServer(s.instance, coreServer)
+	grpcclient.RegisterCoreServer(s.instance, coreServer)
 
 	reflection.Register(s.instance)
 	return nil

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/mesg-foundation/core/interface/grpc/core"
+	"github.com/mesg-foundation/core/grpcclient"
 )
 
 type caster func(value string) (interface{}, error)
@@ -50,7 +50,7 @@ var casters = map[string]caster{
 }
 
 // TaskInputs converts map[string]string to map[string]interface{} based on defined types in the service tasks map.
-func TaskInputs(s *core.Service, taskKey string, taskData map[string]string) (map[string]interface{}, error) {
+func TaskInputs(s *grpcclient.Service, taskKey string, taskData map[string]string) (map[string]interface{}, error) {
 	for _, task := range s.Tasks {
 		if task.Key == taskKey {
 			m := make(map[string]interface{}, len(taskData))
@@ -75,7 +75,7 @@ func TaskInputs(s *core.Service, taskKey string, taskData map[string]string) (ma
 }
 
 // findParam return a param based on the key from a list of parameter
-func findParam(parameters []*core.Parameter, key string) (*core.Parameter, error) {
+func findParam(parameters []*grpcclient.Parameter, key string) (*grpcclient.Parameter, error) {
 	for _, p := range parameters {
 		if p.Key == key {
 			return p, nil

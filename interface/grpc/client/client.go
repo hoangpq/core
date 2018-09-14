@@ -6,20 +6,20 @@ import (
 	"sync"
 
 	"github.com/mesg-foundation/core/config"
-	"github.com/mesg-foundation/core/interface/grpc/core"
+	"github.com/mesg-foundation/core/grpcclient"
 	"github.com/mesg-foundation/core/utils/clierrors"
 	"google.golang.org/grpc"
 )
 
-var _client core.CoreClient
+var _client grpcclient.CoreClient
 var once sync.Once
 
 // API returns the client necessary to access the API
-func API() (core.CoreClient, error) {
+func API() (grpcclient.CoreClient, error) {
 	return getClient()
 }
 
-func getClient() (cli core.CoreClient, err error) {
+func getClient() (cli grpcclient.CoreClient, err error) {
 	once.Do(func() {
 		c, err := config.Global()
 		if err != nil {
@@ -31,7 +31,7 @@ func getClient() (cli core.CoreClient, err error) {
 		if err != nil {
 			return
 		}
-		_client = core.NewCoreClient(connection)
+		_client = grpcclient.NewCoreClient(connection)
 	})
 	cli = _client
 	return
