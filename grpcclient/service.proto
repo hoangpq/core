@@ -1,6 +1,7 @@
 syntax = "proto3";
 
-package grpcclient;
+package core;
+option go_package = "grpcclient";
 
 // This is the definition of a MESG Service.
 message Service {

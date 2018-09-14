@@ -1,6 +1,7 @@
 syntax = "proto3";
 
-package grpcclient;
+package api;
+option go_package = "grpcclient";
 
 import "service.proto";
 
