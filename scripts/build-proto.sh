@@ -13,4 +13,8 @@ GRPC_PLUGIN="--go_out=plugins=grpc:./"
 
 protoc $GRPC_PLUGIN $DATA_DOCS,service-type.md --proto_path=./ $GRPC/core/service.proto
 protoc $GRPC_PLUGIN $API_DOCS,core.md          --proto_path=./ $GRPC/core/api.proto
+
+protoc $GRPC_PLUGIN --proto_path=./ $GRPC/core/api/service.proto
+protoc $GRPC_PLUGIN --proto_path=./ $GRPC/core/api/api.proto
+
 protoc $GRPC_PLUGIN $API_DOCS,service.md       --proto_path=./ $GRPC/service/api.proto
