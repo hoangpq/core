@@ -96,7 +96,7 @@ func (s *Server) register() error {
 		return err
 	}
 
-	service.RegisterServiceServer(s.instance, serviceServer)
+	grpcclient.RegisterServiceServer(s.instance, serviceServer)
 	grpcclient.RegisterCoreServer(s.instance, coreServer)
 
 	reflection.Register(s.instance)
