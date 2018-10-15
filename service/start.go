@@ -72,6 +72,7 @@ func (d *Dependency) Start(networkID string) (containerServiceID string, err err
 	_, port, err := xnet.SplitHostPort(c.Server.Address)
 	endpoint := c.Core.Name + ":" + strconv.Itoa(port)
 	return d.service.container.StartService(container.ServiceOptions{
+		CoreName:  c.Core.Name,
 		Namespace: d.namespace(),
 		Labels: map[string]string{
 			"mesg.service": d.service.Name,

@@ -9,3 +9,7 @@ dev-cli
 **/*.test
 **/debug
 node_modules
+
+# don't break image cache when integration updated.
+integration/
+run-integration

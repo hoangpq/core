@@ -1,0 +1,14 @@
+#!/bin/bash
+
+version="integration"
+cliExecutable="mesg-core-$version"
+
+docker build -t mesg/core:$version --build-arg version="$version" .
+
+go build -o $GOPATH/bin/$cliExecutable \
+  -ldflags="-X 'github.com/mesg-foundation/core/version.Version=$version'" \
+  github.com/mesg-foundation/core/interface/cli
+
+GOCACHE=off \
+MESG_CLI_EXECUTABLE=$cliExecutable \
+  go test -tags real_integration -v ./integration/...

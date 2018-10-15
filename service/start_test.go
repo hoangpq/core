@@ -305,6 +305,7 @@ func mockStartService(d *Dependency, mc *mocks.Container,
 		mounts, _  = d.extractVolumes()
 	)
 	mc.On("StartService", container.ServiceOptions{
+		CoreName:  c.Core.Name,
 		Namespace: d.namespace(),
 		Labels: map[string]string{
 			"mesg.service": d.service.Name,

@@ -12,6 +12,7 @@ import (
 
 // ServiceOptions is a simplify version of swarm.ServiceSpec.
 type ServiceOptions struct {
+	CoreName  string
 	Image     string
 	Namespace []string
 	Ports     []Port
@@ -53,6 +54,7 @@ func (options *ServiceOptions) toSwarmServiceSpec(c *DockerContainer) swarm.Serv
 			Labels: mergeLabels(options.Labels, map[string]string{
 				"com.docker.stack.namespace": namespace,
 				"com.docker.stack.image":     options.Image,
+				"com.mesg.core.name":         options.CoreName,
 			}),
 		},
 		TaskTemplate: swarm.TaskSpec{
@@ -60,6 +62,7 @@ func (options *ServiceOptions) toSwarmServiceSpec(c *DockerContainer) swarm.Serv
 				Image: options.Image,
 				Labels: map[string]string{
 					"com.docker.stack.namespace": namespace,
+					"com.mesg.core.name":         options.CoreName,
 				},
 				Env:    options.Env,
 				Args:   options.Args,

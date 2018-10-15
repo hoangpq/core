@@ -1,0 +1,15 @@
+{
+  "name": "webhook",
+  "version": "1.0.0",
+  "description": "Receive HTTP connections and emit events with the data",
+  "main": "index.js",
+  "author": "Anthony Estebe <anthony@mesg.tech>",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "body-parser": "^1.18.3",
+    "cors": "^2.8.4",
+    "express": "^4.16.3",
+    "mesg-js": "^1.2.1"
+  }
+}

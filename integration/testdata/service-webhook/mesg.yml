@@ -1,0 +1,35 @@
+name: Webhook
+description: Receive HTTP connections and emit events with the data
+events:
+  request:
+    description: "This even is emitted every time the server receive a `POST` request on the URL `/webhook`."
+    data:
+      data:
+        description: "All the data contained in the request data"
+        type: Object
+      headers:
+        description: "All the headers contained in the request"
+        type: Object
+tasks:
+  call:
+    description: "This task will call a webhook and return the result of the call"
+    inputs:
+      url:
+        description: "URL that you want to call"
+        type: String
+      data:
+        description: "Data the you want to send"
+        type: Object
+      headers:
+        description: "Additional headers that you want to send"
+        type: Object
+    outputs:
+      error:
+        description: "Output if an error occurs"
+        data:
+          message:
+            description: "Error message"
+            type: String
+      result:
+        description: "Result of the call the returns the list of the data from the API call result"
+        data: {}
