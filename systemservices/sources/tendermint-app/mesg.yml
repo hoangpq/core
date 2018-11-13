@@ -11,10 +11,8 @@ tasks:
             type: Number
 
 dependencies:
-  tendermint:
-    image: tendermint/tendermint
+  mesg-tendermint:
+    image: mesg-tendermint
     ports:
       - 26656:26656
       - 26657:26657
-    volumes: 
-      - /tendermint
