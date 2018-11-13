@@ -30,7 +30,7 @@
   version = "v1.8.0"
 
 [[projects]]
-  digest = "1:295c678b7bcd8a28f77c5bdb565b4f56a7710fcbf3754d78d2465bfdf44aef68"
+  digest = "1:35621fe20f140f05a0c4ef662c26c0ab4ee50bca78aa30fe87d33120bd28165e"
   name = "github.com/gogo/protobuf"
   packages = [
     "gogoproto",
@@ -41,11 +41,11 @@
     "types",
   ]
   pruneopts = "UT"
-  revision = "1adfc126b41513cc696b209667c8656ea7aac67c"
-  version = "v1.0.0"
+  revision = "636bf0302bc95575d69441b25a2603156ffdddf1"
+  version = "v1.1.1"
 
 [[projects]]
-  digest = "1:4c0989ca0bcd10799064318923b9bc2db6b4d6338dd75f3f2d86c3511aaaf5cf"
+  digest = "1:17fe264ee908afc795734e8c4e63db2accabaf57326dbf21763a7d6b86096260"
   name = "github.com/golang/protobuf"
   packages = [
     "proto",
@@ -55,8 +55,8 @@
     "ptypes/timestamp",
   ]
   pruneopts = "UT"
-  revision = "aa810b61a9c79d51363740d207bb46cf8e620ed5"
-  version = "v1.2.0"
+  revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
+  version = "v1.1.0"
 
 [[projects]]
   branch = "master"
@@ -94,11 +94,9 @@
   version = "v0.8.0"
 
 [[projects]]
-  digest = "1:e459c93f4d86c1e56505e460959ad8c43c95096fba15bb54765da46131666bfb"
+  digest = "1:6437b1e6b8c04c89a10f62a0166ea94ea36925d9315f12aed3e804c4a801e34e"
   name = "github.com/tendermint/tendermint"
   packages = [
-    "abci/example/code",
-    "abci/example/counter",
     "abci/server",
     "abci/types",
     "libs/common",
@@ -193,9 +191,9 @@
   input-imports = [
     "github.com/mesg-foundation/core/x/xsignal",
     "github.com/mesg-foundation/go-service",
-    "github.com/tendermint/tendermint/abci/example/counter",
     "github.com/tendermint/tendermint/abci/server",
     "github.com/tendermint/tendermint/abci/types",
+    "github.com/tendermint/tendermint/libs/common",
     "github.com/tendermint/tendermint/libs/log",
   ]
   solver-name = "gps-cdcl"

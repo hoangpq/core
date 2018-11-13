@@ -1,4 +1,4 @@
-name: tendermint
+name: tendermint-app
 tasks:
   broadcast:
     inputs:
