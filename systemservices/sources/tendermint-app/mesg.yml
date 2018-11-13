@@ -1,0 +1,20 @@
+name: tendermint
+tasks:
+  broadcast:
+    inputs:
+      number:
+        type: Number
+    outputs:
+      success:
+        data:
+          code:
+            type: Number
+
+dependencies:
+  tendermint:
+    image: tendermint/tendermint
+    ports:
+      - 26656:26656
+      - 26657:26657
+    volumes: 
+      - /tendermint

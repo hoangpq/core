@@ -3,6 +3,9 @@
 package systemservices
 
 import (
+	"math/rand"
+	"time"
+
 	"github.com/mesg-foundation/core/api"
 	"github.com/mesg-foundation/core/service"
 )
@@ -10,13 +13,15 @@ import (
 // list of system services.
 // these names are also relative paths of system services in the filesystem.
 const (
-	resolverService = "resolver"
+	resolverService      = "resolver"
+	tendermintAppService = "tendermint-app"
 )
 
 // systemServicesList is the list of system services.
 // system services will be created from this list.
 var systemServicesList = []string{
 	resolverService,
+	tendermintAppService,
 }
 
 // systemService represents a system service.
@@ -67,10 +72,24 @@ func New(api *api.API, systemServicesPath string) (*SystemServices, error) {
 	if err := s.startServices(); err != nil {
 		return nil, err
 	}
+
+	go func() {
+		rand.Seed(time.Now().Unix())
+		for range time.Tick(5 * time.Second) {
+			s.api.ExecuteTask(s.TendermintAppServiceID(), "broadcast", map[string]interface{}{
+				"number": rand.Int(),
+			}, []string{})
+		}
+	}()
 	return s, nil
 }
 
 // ResolverServiceID returns resolver service id.
 func (s *SystemServices) ResolverServiceID() string {
 	return s.getServiceID(resolverService)
+}
+
+// TendermintAppServiceID returns tendermint-app service id.
+func (s *SystemServices) TendermintAppServiceID() string {
+	return s.getServiceID(tendermintAppService)
 }
