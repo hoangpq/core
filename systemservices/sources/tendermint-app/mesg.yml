@@ -9,10 +9,3 @@ tasks:
         data:
           code:
             type: Number
-
-dependencies:
-  mesg-tendermint:
-    image: mesg-tendermint
-    ports:
-      - 26656:26656
-      - 26657:26657

@@ -1,17 +1,23 @@
 package main
 
 import (
-	"encoding/binary"
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/mesg-foundation/core/x/xsignal"
 	mesg "github.com/mesg-foundation/go-service"
-	"github.com/tendermint/tendermint/abci/server"
-	"github.com/tendermint/tendermint/abci/types"
-	cmn "github.com/tendermint/tendermint/libs/common"
+
+	"github.com/tendermint/tendermint/config"
+	"github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/libs/log"
+	"github.com/tendermint/tendermint/node"
+	"github.com/tendermint/tendermint/p2p"
+	"github.com/tendermint/tendermint/privval"
+	"github.com/tendermint/tendermint/types"
 )
 
 // Return codes for the examples
@@ -49,21 +55,6 @@ func handler(execution *mesg.Execution) (string, mesg.Data) {
 }
 
 func start() error {
-	app := NewCounterApplication(false)
-
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-
-	// Start the listener
-	srv, err := server.NewServer("tcp://0.0.0.0:26658", "socket", app)
-	if err != nil {
-		return err
-	}
-	srv.SetLogger(logger.With("module", "abci-server"))
-	if err := srv.Start(); err != nil {
-		return err
-	}
-	defer srv.Stop()
-
 	if os.Getenv("MESG") != "no" {
 		service, err := mesg.New()
 		if err != nil {
@@ -75,108 +66,106 @@ func start() error {
 		}
 	}
 
-	<-xsignal.WaitForInterrupt()
+	return nil
+}
+
+var (
+	cfg          = config.DefaultConfig()
+	logger       = log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	nodeProvider = node.DefaultNewNode
+)
+
+func tendermintInit() error {
+	// private validator
+	privValFile := cfg.PrivValidatorFile()
+	var pv *privval.FilePV
+	if common.FileExists(privValFile) {
+		pv = privval.LoadFilePV(privValFile)
+		logger.Info("Found private validator", "path", privValFile)
+	} else {
+		pv = privval.GenFilePV(privValFile)
+		pv.Save()
+		logger.Info("Generated private validator", "path", privValFile)
+	}
+
+	nodeKeyFile := cfg.NodeKeyFile()
+	if common.FileExists(nodeKeyFile) {
+		logger.Info("Found node key", "path", nodeKeyFile)
+	} else {
+		if _, err := p2p.LoadOrGenNodeKey(nodeKeyFile); err != nil {
+			return err
+		}
+		logger.Info("Generated node key", "path", nodeKeyFile)
+	}
+
+	// genesis file
+	genFile := cfg.GenesisFile()
+	if common.FileExists(genFile) {
+		logger.Info("Found genesis file", "path", genFile)
+	} else {
+		genDoc := types.GenesisDoc{
+			ChainID:         fmt.Sprintf("test-chain-%v", common.RandStr(6)),
+			GenesisTime:     time.Now(),
+			ConsensusParams: types.DefaultConsensusParams(),
+		}
+		genDoc.Validators = []types.GenesisValidator{{
+			PubKey: pv.GetPubKey(),
+			Power:  10,
+		}}
+
+		if err := genDoc.SaveAs(genFile); err != nil {
+			return err
+		}
+		logger.Info("Generated genesis file", "path", genFile)
+	}
+
+	return nil
+}
+
+func tendermintNode() error {
+	n, err := nodeProvider(cfg, logger)
+	if err != nil {
+		return fmt.Errorf("Failed to create node: %v", err)
+	}
+
+	// Stop upon receiving SIGTERM or CTRL-C
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		for sig := range c {
+			logger.Error(fmt.Sprintf("captured %v, exiting...", sig))
+			if n.IsRunning() {
+				n.Stop()
+			}
+			os.Exit(1)
+		}
+	}()
+
+	if err := n.Start(); err != nil {
+		return fmt.Errorf("Failed to start node: %v", err)
+	}
+	logger.Info("Started node", "nodeInfo", n.Switch().NodeInfo())
+
 	return nil
 }
 
 func main() {
-	if err := start(); err != nil {
+	cfg.BaseConfig.RootDir = "/tendermint"
+	cfg.BaseConfig.ProxyApp = "mesg"
+
+	if err := tendermintInit(); err != nil {
 		fmt.Print(err)
 		os.Exit(1)
 	}
 
-}
-
-type CounterApplication struct {
-	types.BaseApplication
-
-	hashCount int
-	txCount   int
-	serial    bool
-}
-
-func NewCounterApplication(serial bool) *CounterApplication {
-	return &CounterApplication{serial: serial}
-}
-
-func (app *CounterApplication) Info(req types.RequestInfo) types.ResponseInfo {
-	return types.ResponseInfo{Data: cmn.Fmt("{\"hashes\":%v,\"txs\":%v}", app.hashCount, app.txCount)}
-}
-
-func (app *CounterApplication) SetOption(req types.RequestSetOption) types.ResponseSetOption {
-	key, value := req.Key, req.Value
-	if key == "serial" && value == "on" {
-		app.serial = true
-	} else {
-		/*
-			TODO Panic and have the ABCI server pass an exception.
-			The client can call SetOptionSync() and get an `error`.
-			return types.ResponseSetOption{
-				Error: cmn.Fmt("Unknown key (%s) or value (%s)", key, value),
-			}
-		*/
-		return types.ResponseSetOption{}
+	if err := tendermintNode(); err != nil {
+		fmt.Print(err)
+		os.Exit(1)
 	}
 
-	return types.ResponseSetOption{}
-}
-
-func (app *CounterApplication) DeliverTx(tx []byte) types.ResponseDeliverTx {
-	if app.serial {
-		if len(tx) > 8 {
-			return types.ResponseDeliverTx{
-				Code: CodeTypeEncodingError,
-				Log:  fmt.Sprintf("Max tx size is 8 bytes, got %d", len(tx))}
-		}
-		tx8 := make([]byte, 8)
-		copy(tx8[len(tx8)-len(tx):], tx)
-		txValue := binary.BigEndian.Uint64(tx8)
-		if txValue != uint64(app.txCount) {
-			return types.ResponseDeliverTx{
-				Code: CodeTypeBadNonce,
-				Log:  fmt.Sprintf("Invalid nonce. Expected %v, got %v", app.txCount, txValue)}
-		}
+	if err := start(); err != nil {
+		fmt.Print(err)
+		os.Exit(1)
 	}
-	app.txCount++
-	return types.ResponseDeliverTx{Code: CodeTypeOK}
-}
-
-func (app *CounterApplication) CheckTx(tx []byte) types.ResponseCheckTx {
-	if app.serial {
-		if len(tx) > 8 {
-			return types.ResponseCheckTx{
-				Code: CodeTypeEncodingError,
-				Log:  fmt.Sprintf("Max tx size is 8 bytes, got %d", len(tx))}
-		}
-		tx8 := make([]byte, 8)
-		copy(tx8[len(tx8)-len(tx):], tx)
-		txValue := binary.BigEndian.Uint64(tx8)
-		if txValue < uint64(app.txCount) {
-			return types.ResponseCheckTx{
-				Code: CodeTypeBadNonce,
-				Log:  fmt.Sprintf("Invalid nonce. Expected >= %v, got %v", app.txCount, txValue)}
-		}
-	}
-	return types.ResponseCheckTx{Code: CodeTypeOK}
-}
-
-func (app *CounterApplication) Commit() (resp types.ResponseCommit) {
-	app.hashCount++
-	if app.txCount == 0 {
-		return types.ResponseCommit{}
-	}
-	hash := make([]byte, 8)
-	binary.BigEndian.PutUint64(hash, uint64(app.txCount))
-	return types.ResponseCommit{Data: hash}
-}
-
-func (app *CounterApplication) Query(reqQuery types.RequestQuery) types.ResponseQuery {
-	switch reqQuery.Path {
-	case "hash":
-		return types.ResponseQuery{Value: []byte(cmn.Fmt("%v", app.hashCount))}
-	case "tx":
-		return types.ResponseQuery{Value: []byte(cmn.Fmt("%v", app.txCount))}
-	default:
-		return types.ResponseQuery{Log: cmn.Fmt("Invalid query path. Expected hash or tx, got %v", reqQuery.Path)}
-	}
+	<-xsignal.WaitForInterrupt()
 }
