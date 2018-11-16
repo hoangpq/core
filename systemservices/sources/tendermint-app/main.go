@@ -150,6 +150,7 @@ func tendermintNode() error {
 }
 
 func main() {
+	os.MkdirAll("/tendermint/config")
 	cfg.BaseConfig.RootDir = "/tendermint"
 	cfg.BaseConfig.ProxyApp = "mesg"
 
