@@ -11,7 +11,6 @@ import (
 
 	mesg "github.com/mesg-foundation/go-service"
 
-	"github.com/tendermint/tendermint/abci/server"
 	"github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/common"
@@ -19,6 +18,7 @@ import (
 	"github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/p2p"
 	"github.com/tendermint/tendermint/privval"
+	"github.com/tendermint/tendermint/proxy"
 	xxxtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -57,18 +57,6 @@ func handler(execution *mesg.Execution) (string, mesg.Data) {
 }
 
 func start() error {
-	app := NewCounterApplication(false)
-
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-
-	srv, err := server.NewServer("tcp://0.0.0.0:26658", "socket", app)
-	if err != nil {
-		return err
-	}
-	srv.SetLogger(logger.With("module", "abci-server"))
-	if err := srv.Start(); err != nil {
-		return err
-	}
 	if os.Getenv("MESG") != "no" {
 		service, err := mesg.New()
 		if err != nil {
@@ -79,7 +67,6 @@ func start() error {
 			return err
 		}
 	}
-	select {}
 
 	return nil
 }
@@ -87,8 +74,32 @@ func start() error {
 var (
 	cfg          = config.DefaultConfig()
 	logger       = log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	nodeProvider = node.DefaultNewNode
+	nodeProvider = DefaultNewNode
 )
+
+// DefaultNewNode returns a Tendermint node with default settings for the
+// PrivValidator, ClientCreator, GenesisDoc, and DBProvider.
+// It implements NodeProvider.
+func DefaultNewNode(cfg *config.Config, logger log.Logger) (*node.Node, error) {
+	// Generate node PrivKey
+	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
+	if err != nil {
+		return nil, err
+	}
+	return node.NewNode(cfg,
+		privval.LoadOrGenFilePV(cfg.PrivValidatorFile()),
+		nodeKey,
+		DefaultClientCreator(cfg.ProxyApp, cfg.ABCI, cfg.DBDir()),
+		node.DefaultGenesisDocProviderFunc(cfg),
+		node.DefaultDBProvider,
+		node.DefaultMetricsProvider(cfg.Instrumentation),
+		logger,
+	)
+}
+
+func DefaultClientCreator(addr, transport, dbDir string) proxy.ClientCreator {
+	return proxy.NewLocalClientCreator(NewCounterApplication(false))
+}
 
 func tendermintInit() error {
 	// private validator
@@ -169,20 +180,21 @@ func main() {
 	cfg.BaseConfig.RootDir = "/tendermint"
 	cfg.BaseConfig.ProxyApp = "mesg"
 
-	// if err := tendermintInit(); err != nil {
-	// 	fmt.Print(err)
-	// 	os.Exit(1)
-	// }
+	if err := tendermintInit(); err != nil {
+		fmt.Print(err)
+		os.Exit(1)
+	}
 
-	// if err := tendermintNode(); err != nil {
-	// 	fmt.Print(err)
-	// 	os.Exit(1)
-	// }
+	if err := tendermintNode(); err != nil {
+		fmt.Print(err)
+		os.Exit(1)
+	}
 
 	if err := start(); err != nil {
 		fmt.Print(err)
 		os.Exit(1)
 	}
+	select {}
 }
 
 type CounterApplication struct {
