@@ -32,16 +32,12 @@
   version = "=1.1.1"
 
 [[constraint]]
-  name = "github.com/mesg-foundation/core"
-  version = "0.4.0"
-
-[[constraint]]
   branch = "master"
   name = "github.com/mesg-foundation/go-service"
 
 [[constraint]]
   name = "github.com/tendermint/tendermint"
-  version = "0.26.2"
+  version = "0.26.3"
 
 [prune]
   go-tests = true

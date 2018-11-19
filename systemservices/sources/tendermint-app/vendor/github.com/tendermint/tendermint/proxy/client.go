@@ -7,7 +7,6 @@ import (
 
 	abcicli "github.com/tendermint/tendermint/abci/client"
 	"github.com/tendermint/tendermint/abci/example/kvstore"
-	"github.com/tendermint/tendermint/abci/mesg"
 	"github.com/tendermint/tendermint/abci/types"
 )
 
@@ -65,8 +64,6 @@ func (r *remoteClientCreator) NewABCIClient() (abcicli.Client, error) {
 
 func DefaultClientCreator(addr, transport, dbDir string) ClientCreator {
 	switch addr {
-	case "mesg":
-		return NewLocalClientCreator(mesg.NewKVStoreApplication())
 	case "kvstore":
 		fallthrough
 	case "dummy":
