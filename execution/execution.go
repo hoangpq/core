@@ -14,10 +14,12 @@ type Status int
 // Created    => The execution is created but not yet processed
 // InProgress => The execution is being processed
 // Completed  => The execution is completed
+// Failed			=> The execution cannot be completed because an error occurs
 const (
 	Created Status = iota
 	InProgress
 	Completed
+	Failed
 )
 
 // Execution stores all informations about executions.
@@ -34,6 +36,7 @@ type Execution struct {
 	CreatedAt         time.Time              `hash:"-"`
 	ExecutedAt        time.Time              `hash:"-"`
 	ExecutionDuration time.Duration          `hash:"-"`
+	Error             error                  `hash:"-"`
 }
 
 // New returns a new execution. It returns an error if inputs are invalid.
@@ -98,4 +101,11 @@ func (execution *Execution) Complete(outputKey string, outputData map[string]int
 	execution.OutputData = outputData
 	execution.Status = Completed
 	return nil
+}
+
+// Fail mark an execution as failed based on an error
+func (execution *Execution) Fail(err error) error {
+	execution.Status = Failed
+	execution.Error = err
+	return err
 }
